@@ -23,24 +23,24 @@ router.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email'
 
 router.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/api/login'}), (req, res) => {
   req.session.facebookId = req.user.facebookId
-  res.redirect(`/api/producto`)
+  return res.status(200).json( { data: { facebookId }} )
 })
 
-router.get('/login', (req, res) => {
-  let usuarioExistente = JSON.parse(req.query.ue || false)
-  let passwordIncorrecto = JSON.parse(req.query.pi || false)
-  res.render('login', { usuarioExistente, passwordIncorrecto } )
-})
+// router.get('/login', (req, res) => {
+//   let usuarioExistente = JSON.parse(req.query.ue || false)
+//   let passwordIncorrecto = JSON.parse(req.query.pi || false)
+//   res.render('login', { usuarioExistente, passwordIncorrecto } )
+// })
 
-router.get('/register', (req, res) => {
-  res.sendFile(`${path.join(__dirname, '..', '/public/register.html')}`)
-})
+// router.get('/register', (req, res) => {
+//   res.sendFile(`${path.join(__dirname, '..', '/public/register.html')}`)
+// })
 
-router.get('/perfil', checkIsAuthenticated, async  (req, res) => {
-  let perfil = await usuarioServicio.getUserByIdFacebook(req.session.facebookId)
-  console.log({perfil})
-  res.render('perfil', { perfil } )     
-})
+// router.get('/perfil', checkIsAuthenticated, async  (req, res) => {
+//   let perfil = await usuarioServicio.getUserByIdFacebook(req.session.facebookId)
+//   console.log({perfil})
+//   res.render('perfil', { perfil } )     
+// })
 
 router.post('/register', async (req, res) => {
   let usuario = await usuarioServicio.getUserByName(req.body.usuario.toLowerCase())
@@ -54,24 +54,24 @@ router.post('/register', async (req, res) => {
       email: req.body.email.toLowerCase()
     }
   
-    await usuarioServicio.add(nuevoUsuario)
+    usuario = await usuarioServicio.add(nuevoUsuario)
   }
-  return res.redirect(`/api/login?ue=${ue}`)  
+  return res.status(200).json( { data: usuario } )
 })
 
-router.post('/ingresar', passport.authenticate('login', { failureRedirect: '/login?pi=true'}), async (req, res) => {
+router.post('/ingresar', async (req, res) => {
   try {
-    res.redirect('/api/producto')
+    res.status(200).json( { data: 'login correcto' }) 
   } catch ( err ) { console.log(err) }
 })
 
-router.get('/salir', async (req, res) => {
-  let usuarioDB = await usuarioServicio.getById(req.session.passport.user)
+// router.get('/salir', async (req, res) => {
+//   let usuarioDB = await usuarioServicio.getById(req.session.passport.user)
   
-  req.session.destroy( () => {
-    mensajesServicio.sendMailEthereal(usuarioDB, 'logout')
-    res.redirect('/api/')
-  })
-})
+//   req.session.destroy( () => {
+//     mensajesServicio.sendMailEthereal(usuarioDB, 'logout')
+//     res.redirect('/api/')
+//   })
+// })
 
 module.exports = router
